@@ -13,6 +13,7 @@ export default tseslint.config(
   {
     rules: {
       'prettier/prettier': 'error',
+      '@typescript-eslint/restrict-template-expressions': 'off',
     },
     plugins: { prettier: eslintPluginPrettier },
     languageOptions: {

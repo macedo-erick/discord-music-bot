@@ -1,15 +1,24 @@
+import 'reflect-metadata';
 import { PauseCommand } from '@commands/pause';
 import { PlayCommand } from '@commands/play-command';
-import { clientId, guildId, token } from '@config/config.json';
+import { WipeChannelCommand } from '@commands/wipe-channel';
 import { CommandsBuilder } from '@utils/commands-builder';
 import { Client, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
+import { container } from 'tsyringe';
+
+import { clientId, guildId, token } from './configs/bot-config.json';
 
 async function main() {
+  const playCommand = container.resolve(PlayCommand);
+  const pauseCommand = container.resolve(PauseCommand);
+  const wipeChannelCommand = container.resolve(WipeChannelCommand);
+
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
   const commands = new CommandsBuilder()
-    .add(PlayCommand)
-    .add(PauseCommand)
+    .add(playCommand)
+    .add(pauseCommand)
+    .add(wipeChannelCommand)
     .install(client);
 
   client.once(Events.ClientReady, (readyClient) => {

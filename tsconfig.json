@@ -25,6 +25,8 @@
     "noImplicitReturns": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "paths": {
       "@config/*": ["./src/config/*"],
       "@commands/*": ["./src/commands/*"],
