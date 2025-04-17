@@ -30,10 +30,11 @@
   },
   "dependencies": {
     "@discord-player/extractor": "^7.1.0",
-    "discord-player": "^7.1.0",
+    "@discordjs/opus": "^0.10.0",
+    "@discordjs/voice": "^0.18.0",
+    "@distube/ytdl-core": "^4.16.8",
+    "@distube/ytsr": "^2.0.4",
     "discord.js": "^14.18.0",
-    "ffmpeg-static": "^5.2.0",
-    "mediaplex": "^1.0.0",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0"
   }

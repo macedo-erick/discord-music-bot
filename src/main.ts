@@ -1,10 +1,7 @@
 import 'reflect-metadata';
-import { PauseCommand } from '@commands/pause';
 import { PlayCommand } from '@commands/play-command';
 import { WipeChannelCommand } from '@commands/wipe-channel';
-import { DefaultExtractors } from '@discord-player/extractor';
 import { CommandsBuilder } from '@utils/commands-builder';
-import { Player } from 'discord-player';
 import { Client, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { container } from 'tsyringe';
 
@@ -12,18 +9,14 @@ import { clientId, guildId, token } from './configs/bot-config.json';
 
 async function main() {
   const playCommand = container.resolve(PlayCommand);
-  const pauseCommand = container.resolve(PauseCommand);
   const wipeChannelCommand = container.resolve(WipeChannelCommand);
 
   const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
   });
 
-  const musicPlayer = new Player(client);
-
   const commands = new CommandsBuilder()
     .add(playCommand)
-    .add(pauseCommand)
     .add(wipeChannelCommand)
     .install(client);
 
@@ -44,7 +37,6 @@ async function main() {
   }
 
   await client.login(token);
-  await musicPlayer.extractors.loadMulti(DefaultExtractors);
 }
 
 main().catch((err: unknown) => {
