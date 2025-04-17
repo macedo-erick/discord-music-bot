@@ -1,25 +1,19 @@
 import { Command } from '@commands/command';
 import {
-  createAudioPlayer,
-  createAudioResource,
-  joinVoiceChannel,
-  NoSubscriberBehavior,
-  StreamType,
-  VoiceConnectionStatus,
-} from '@discordjs/voice';
-import {
   ChatInputCommandInteraction,
   GuildMember,
   MessageFlags,
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
 
-import { YoutubeService } from '../services/youtube';
+import { PlayerService } from '../services/player-service';
+import { YoutubeService } from '../services/youtube-service';
 
 @injectable()
 export class PlayCommand extends Command {
   constructor(
     @inject(YoutubeService) private readonly youtubeService: YoutubeService,
+    @inject(PlayerService) private readonly playerService: PlayerService,
   ) {
     super('play', 'Give the song name or URL to start playing', (builder) =>
       builder.addStringOption((option) =>
@@ -43,28 +37,10 @@ export class PlayCommand extends Command {
       const query = interaction.options.getString('query', true);
       const data = await this.youtubeService.download(query);
 
-      const connection = joinVoiceChannel({
-        adapterCreator: channel.guild.voiceAdapterCreator,
-        channelId: channel.id,
-        guildId: channel.guild.id,
-      });
+      this.playerService.connect(channel);
+      this.playerService.play(data);
 
       await interaction.deferReply();
-
-      connection.on(VoiceConnectionStatus.Ready, () => {
-        const player = createAudioPlayer({
-          behaviors: {
-            noSubscriber: NoSubscriberBehavior.Pause,
-          },
-        });
-
-        const audioResource = createAudioResource(data, {
-          inputType: StreamType.Arbitrary,
-        });
-
-        player.play(audioResource);
-        connection.subscribe(player);
-      });
 
       return await interaction.followUp(`**enqueued !**`);
     } catch (err) {

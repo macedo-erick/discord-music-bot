@@ -1,5 +1,7 @@
 import 'reflect-metadata';
+import { PauseCommand } from '@commands/pause-command';
 import { PlayCommand } from '@commands/play-command';
+import { UnpauseCommand } from '@commands/unpause';
 import { WipeChannelCommand } from '@commands/wipe-channel';
 import { CommandsBuilder } from '@utils/commands-builder';
 import { Client, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
@@ -10,6 +12,8 @@ import { clientId, guildId, token } from './configs/bot-config.json';
 async function main() {
   const playCommand = container.resolve(PlayCommand);
   const wipeChannelCommand = container.resolve(WipeChannelCommand);
+  const pauseCommand = container.resolve(PauseCommand);
+  const unpauseCommand = container.resolve(UnpauseCommand);
 
   const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -18,6 +22,8 @@ async function main() {
   const commands = new CommandsBuilder()
     .add(playCommand)
     .add(wipeChannelCommand)
+    .add(pauseCommand)
+    .add(unpauseCommand)
     .install(client);
 
   client.once(Events.ClientReady, (readyClient) => {
