@@ -1,4 +1,9 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import {
+  ChatInputCommandInteraction,
+  InteractionResponse,
+  Message,
+  SlashCommandBuilder,
+} from 'discord.js';
 
 export abstract class Command {
   public readonly data: SlashCommandBuilder;
@@ -15,5 +20,7 @@ export abstract class Command {
     if (configure) configure(this.data);
   }
 
-  abstract execute(interaction: ChatInputCommandInteraction): Promise<void>;
+  abstract execute(
+    interaction: ChatInputCommandInteraction,
+  ): Promise<InteractionResponse | Message>;
 }

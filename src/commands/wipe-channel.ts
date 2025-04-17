@@ -21,31 +21,34 @@ export class WipeChannelCommand extends Command {
     );
   }
 
-  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  async execute(interaction: ChatInputCommandInteraction) {
     const channel = interaction.channel as Channel;
     const amount = interaction.options.getString('amount', true);
 
     if (channel.isVoiceBased()) {
-      await interaction.reply({
+      return interaction.reply({
         content: 'This command works only in text channels',
         flags: MessageFlags.Ephemeral,
       });
     }
 
-    if (channel.isTextBased()) {
-      try {
-        const deleted = await (channel as TextChannel).bulkDelete(
-          Number(amount),
-          true,
-        );
+    try {
+      const deleted = await (channel as TextChannel).bulkDelete(
+        Number(amount),
+        true,
+      );
 
-        await interaction.reply({
-          content: `Deleted ${deleted.size} messages.`,
-          flags: MessageFlags.Ephemeral,
-        });
-      } catch (err) {
-        console.log(err);
-      }
+      return await interaction.reply({
+        content: `Deleted ${deleted.size} messages.`,
+        flags: MessageFlags.Ephemeral,
+      });
+    } catch (err) {
+      console.log(err);
+
+      return interaction.reply({
+        content: `Could not delete messages.`,
+        flags: MessageFlags.Ephemeral,
+      });
     }
   }
 }

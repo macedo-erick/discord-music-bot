@@ -1,18 +1,15 @@
 import { Command } from '@commands/command';
+import { useMainPlayer } from 'discord-player';
 import {
-  ActionRowBuilder,
   ChatInputCommandInteraction,
-  ComponentType,
-  StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
+  GuildMember,
+  MessageFlags,
 } from 'discord.js';
-import { inject, injectable } from 'tsyringe';
-
-import { YoutubeService } from '../services/youtube';
+import { injectable } from 'tsyringe';
 
 @injectable()
 export class PlayCommand extends Command {
-  constructor(@inject(YoutubeService) private youtubeService: YoutubeService) {
+  constructor() {
     super('play', 'Give the song name or URL to start playing', (builder) =>
       builder.addStringOption((option) =>
         option
@@ -23,48 +20,31 @@ export class PlayCommand extends Command {
     );
   }
 
-  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    const query = interaction.options.getString('query', true);
+  async execute(interaction: ChatInputCommandInteraction) {
+    const interactionMember = interaction.member as GuildMember;
+    const channel = interactionMember.voice.channel;
 
-    const select = new StringSelectMenuBuilder()
-      .setCustomId('type')
-      .setPlaceholder('Choose media type')
-      .addOptions(
-        new StringSelectMenuOptionBuilder().setLabel('Video').setValue('video'),
-        new StringSelectMenuOptionBuilder().setLabel('Audio').setValue('audio'),
-      );
-
-    const actionRow =
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
-
-    await interaction.reply({
-      components: [actionRow],
-      withResponse: true,
-    });
-
-    const message = await interaction.fetchReply();
+    if (!channel) {
+      return interaction.reply('You are not connected to a voice channel!');
+    }
 
     try {
-      const confirmation = await message.awaitMessageComponent({
-        componentType: ComponentType.StringSelect,
-        filter: (i) => i.user.id === interaction.user.id,
-        time: 10_000,
+      const query = interaction.options.getString('query', true);
+      const player = useMainPlayer();
+
+      await interaction.deferReply();
+
+      const { track } = await player.play(channel, query, {
+        nodeOptions: { metadata: interaction },
       });
 
-      const [type] = confirmation.values;
-
-      this.youtubeService.download(query);
-
-      await confirmation.update({
-        components: [],
-        content: `Playing ${type} for ${query}`,
-      });
+      return await interaction.followUp(`**${track.cleanTitle}** enqueued!`);
     } catch (err) {
       console.error(err);
 
-      await interaction.editReply({
-        components: [],
-        content: 'Confirmation not received within 10 seconds, cancelling',
+      return await interaction.reply({
+        content: 'Something went wrong',
+        flags: MessageFlags.Ephemeral,
       });
     }
   }
