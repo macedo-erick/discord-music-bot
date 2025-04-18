@@ -1,10 +1,9 @@
-import { Command } from '@commands/command';
+import { Command } from '@utils/command';
 import { PlayerBuilder } from '@utils/player-builder';
+import { VoiceChannelNotConnectedEmbed } from '@utils/voice-channel-not-connected-embed';
 import {
   ChatInputCommandInteraction,
   GuildMember,
-  InteractionResponse,
-  Message,
   MessageFlags,
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
@@ -17,17 +16,15 @@ export class ResumeCommand extends Command {
     super('resume', 'Resume the current song');
   }
 
-  async execute(
-    interaction: ChatInputCommandInteraction,
-  ): Promise<InteractionResponse | Message> {
+  async execute(interaction: ChatInputCommandInteraction) {
     try {
       const interactionMember = interaction.member as GuildMember;
       const channel = interactionMember.voice.channel;
 
       if (!channel) {
-        return await interaction.reply(
-          'You are not connected to a voice channel!',
-        );
+        return await interaction.reply({
+          embeds: [new VoiceChannelNotConnectedEmbed()],
+        });
       }
 
       this.playerBuilder.get(channel).unpause();

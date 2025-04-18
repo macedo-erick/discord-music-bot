@@ -1,4 +1,5 @@
 import {
+  AudioPlayerStatus,
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
@@ -7,10 +8,9 @@ import {
   VoiceConnection,
   VoiceConnectionStatus,
 } from '@discordjs/voice';
+import { Song } from '@models/song';
 import { VoiceBasedChannel } from 'discord.js';
 import { injectable } from 'tsyringe';
-
-import { Song } from '../models/song';
 
 @injectable()
 export class PlayerService {
@@ -21,6 +21,8 @@ export class PlayerService {
     },
   });
 
+  private queue: Song[] = [];
+
   constructor(channel: VoiceBasedChannel) {
     this.connection = joinVoiceChannel({
       adapterCreator: channel.guild.voiceAdapterCreator,
@@ -30,6 +32,14 @@ export class PlayerService {
 
     this.connection.on(VoiceConnectionStatus.Ready, () => {
       this.connection?.subscribe(this.player);
+    });
+
+    this.player.on(AudioPlayerStatus.Idle, () => {
+      const next = this.queue.shift();
+
+      if (next) {
+        this._playResource(next);
+      }
     });
 
     this.connection.on('error', console.error);
@@ -43,15 +53,27 @@ export class PlayerService {
     this.player.pause();
   }
 
-  play(song: Song) {
-    this.player.play(
-      createAudioResource(song.data, {
-        inputType: StreamType.Arbitrary,
-      }),
-    );
+  play(song: Song): number {
+    const isIdle = this.player.state.status === AudioPlayerStatus.Idle;
+
+    if (isIdle) {
+      this._playResource(song);
+      return 0;
+    }
+
+    this.queue.push(song);
+
+    return this.queue.length + 1;
   }
 
   unpause() {
     this.player.unpause();
+  }
+
+  private _playResource(song: Song) {
+    const resource = createAudioResource(song.data, {
+      inputType: StreamType.Arbitrary,
+    });
+    this.player.play(resource);
   }
 }

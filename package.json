@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "dev": "tsx --watch src/main.ts",
-    "start": "tsx src/main.ts",
+    "dev": "NODE_ENV=development tsx --watch src/main.ts",
+    "start": " NODE_ENV=production tsx src/main.ts",
     "build": "tsc",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
@@ -35,6 +35,7 @@
     "@distube/ytdl-core": "^4.16.8",
     "@distube/ytsr": "^2.0.4",
     "discord.js": "^14.18.0",
+    "dotenv": "^16.5.0",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0"
   }

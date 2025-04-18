@@ -1,7 +1,6 @@
 import {
   ChatInputCommandInteraction,
   InteractionResponse,
-  Message,
   SlashCommandBuilder,
 } from 'discord.js';
 
@@ -22,5 +21,5 @@ export abstract class Command {
 
   abstract execute(
     interaction: ChatInputCommandInteraction,
-  ): Promise<InteractionResponse | Message>;
+  ): Promise<InteractionResponse>;
 }

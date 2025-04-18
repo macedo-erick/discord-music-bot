@@ -28,10 +28,11 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "paths": {
-      "@config/*": ["./src/config/*"],
+      "@configs/*": ["./src/configs/*"],
       "@commands/*": ["./src/commands/*"],
-      "@utils/*": ["./src/utils/*"]
-      "@services/*": ["./src/services/*"]
+      "@utils/*": ["./src/utils/*"],
+      "@services/*": ["./src/services/*"],
+      "@models/*": ["./src/models/*"]
     }
   }
 }

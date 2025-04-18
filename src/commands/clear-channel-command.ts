@@ -1,4 +1,4 @@
-import { Command } from '@commands/command';
+import { Command } from '@utils/command';
 import {
   Channel,
   ChatInputCommandInteraction,
@@ -7,7 +7,7 @@ import {
   TextChannel,
 } from 'discord.js';
 
-export class ClearChannel extends Command {
+export class ClearChannelCommand extends Command {
   constructor() {
     super('clear-channel', 'Clear messages from text channel', (builder) =>
       builder

@@ -1,8 +1,11 @@
-import { Command } from '@commands/command';
+import { defaultAvatar } from '@configs/bot-config.json';
 import { YoutubeService } from '@services/youtube-service';
+import { Command } from '@utils/command';
 import { PlayerBuilder } from '@utils/player-builder';
+import { VoiceChannelNotConnectedEmbed } from '@utils/voice-channel-not-connected-embed';
 import {
   ChatInputCommandInteraction,
+  EmbedBuilder,
   GuildMember,
   MessageFlags,
 } from 'discord.js';
@@ -30,20 +33,27 @@ export class PlayCommand extends Command {
       const channel = interactionMember.voice.channel;
 
       if (!channel) {
-        return await interaction.reply(
-          'You are not connected to a voice channel!',
-        );
+        return await interaction.reply({
+          embeds: [new VoiceChannelNotConnectedEmbed()],
+        });
       }
 
       const query = interaction.options.getString('query', true);
       const song = await this.youtubeService.download(query);
 
       const player = this.playerBuilder.get(channel);
-      player.play(song);
+      const queuePosition = player.play(song);
 
-      await interaction.deferReply();
+      const embed = new EmbedBuilder()
+        .setColor(0x1ed760)
+        .setAuthor({
+          iconURL:
+            interactionMember.user.avatarURL({ size: 16 }) ?? defaultAvatar,
+          name: `Adding the Song to Queue #${queuePosition}`,
+        })
+        .setDescription(song.title);
 
-      return await interaction.followUp(`**enqueued !**`);
+      return await interaction.reply({ embeds: [embed] });
     } catch (err) {
       console.error(err);
 

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Command } from '@commands/command';
+import { Command } from '@utils/command';
 import { Client, Collection, Events } from 'discord.js';
 
 type CommandCtor = new () => Command;
