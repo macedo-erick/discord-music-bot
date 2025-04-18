@@ -1,8 +1,7 @@
 import ytdl from '@distube/ytdl-core';
 import ytsr from '@distube/ytsr';
+import { Song } from '@models/song';
 import { injectable } from 'tsyringe';
-
-import { Song } from '../models/song';
 
 @injectable()
 export class YoutubeService {
@@ -26,11 +25,24 @@ export class YoutubeService {
 
   private async downloadFromUrl(url: string): Promise<Song> {
     const {
-      videoDetails: { thumbnails, title },
+      videoDetails: { lengthSeconds, thumbnails, title },
     } = await ytdl.getBasicInfo(url);
+
+    const hours = Math.floor(parseInt(lengthSeconds) / 3600);
+    const minutes = Math.floor((parseInt(lengthSeconds) % 3600) / 60);
+    const seconds = parseInt(lengthSeconds) % 60;
+
+    const duration = [
+      hours > 0 ? hours.toString().padStart(2, '0') : null,
+      minutes.toString().padStart(2, '0'),
+      seconds.toString().padStart(2, '0'),
+    ]
+      .filter(Boolean)
+      .join(':');
 
     return {
       data: ytdl(url, { filter: 'audioonly' }),
+      duration,
       thumbnail: thumbnails[0].url,
       title,
       url,

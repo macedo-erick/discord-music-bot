@@ -51,7 +51,7 @@ export class PlayCommand extends Command {
             interactionMember.user.avatarURL({ size: 16 }) ?? defaultAvatar,
           name: `Adding the Song to Queue #${queuePosition}`,
         })
-        .setDescription(song.title);
+        .setDescription(`${song.title} [${song.duration}]`);
 
       return await interaction.reply({ embeds: [embed] });
     } catch (err) {

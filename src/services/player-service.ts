@@ -58,7 +58,7 @@ export class PlayerService {
 
     if (isIdle) {
       this._playResource(song);
-      return 0;
+      return 1;
     }
 
     this.queue.push(song);
@@ -76,4 +76,7 @@ export class PlayerService {
     });
     this.player.play(resource);
   }
+
+  // TODO: Add method to skip the player
+  // TODO: Add method to display now playing
 }
