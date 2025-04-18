@@ -7,9 +7,9 @@ import {
   TextChannel,
 } from 'discord.js';
 
-export class WipeChannelCommand extends Command {
+export class ClearChannel extends Command {
   constructor() {
-    super('wipe-channel', 'Clear messages from text channel', (builder) =>
+    super('clear-channel', 'Clear messages from text channel', (builder) =>
       builder
         .addStringOption((option) =>
           option

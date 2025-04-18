@@ -1,4 +1,6 @@
 import { Command } from '@commands/command';
+import { YoutubeService } from '@services/youtube-service';
+import { PlayerBuilder } from '@utils/player-builder';
 import {
   ChatInputCommandInteraction,
   GuildMember,
@@ -6,14 +8,11 @@ import {
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
 
-import { PlayerService } from '../services/player-service';
-import { YoutubeService } from '../services/youtube-service';
-
 @injectable()
 export class PlayCommand extends Command {
   constructor(
     @inject(YoutubeService) private readonly youtubeService: YoutubeService,
-    @inject(PlayerService) private readonly playerService: PlayerService,
+    @inject(PlayerBuilder) private readonly playerBuilder: PlayerBuilder,
   ) {
     super('play', 'Give the song name or URL to start playing', (builder) =>
       builder.addStringOption((option) =>
@@ -26,19 +25,21 @@ export class PlayCommand extends Command {
   }
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const interactionMember = interaction.member as GuildMember;
-    const channel = interactionMember.voice.channel;
-
-    if (!channel) {
-      return interaction.reply('You are not connected to a voice channel!');
-    }
-
     try {
-      const query = interaction.options.getString('query', true);
-      const data = await this.youtubeService.download(query);
+      const interactionMember = interaction.member as GuildMember;
+      const channel = interactionMember.voice.channel;
 
-      this.playerService.connect(channel);
-      this.playerService.play(data);
+      if (!channel) {
+        return await interaction.reply(
+          'You are not connected to a voice channel!',
+        );
+      }
+
+      const query = interaction.options.getString('query', true);
+      const song = await this.youtubeService.download(query);
+
+      const player = this.playerBuilder.get(channel);
+      player.play(song);
 
       await interaction.deferReply();
 

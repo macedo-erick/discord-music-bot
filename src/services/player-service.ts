@@ -8,22 +8,20 @@ import {
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import { VoiceBasedChannel } from 'discord.js';
-import { Readable } from 'node:stream';
-import { singleton } from 'tsyringe';
+import { injectable } from 'tsyringe';
 
-// TODO: Improve singleton to manage multiple guilds
+import { Song } from '../models/song';
 
-@singleton()
+@injectable()
 export class PlayerService {
   private connection: null | VoiceConnection = null;
-
   private player = createAudioPlayer({
     behaviors: {
       noSubscriber: NoSubscriberBehavior.Pause,
     },
   });
 
-  connect(channel: VoiceBasedChannel): this {
+  constructor(channel: VoiceBasedChannel) {
     this.connection = joinVoiceChannel({
       adapterCreator: channel.guild.voiceAdapterCreator,
       channelId: channel.id,
@@ -35,36 +33,25 @@ export class PlayerService {
     });
 
     this.connection.on('error', console.error);
-
-    return this;
   }
 
   disconnect() {
     this.connection?.destroy();
-    this.connection = null;
   }
 
   pause() {
-    if (!this.connection) {
-      throw new Error('Not connected');
-    }
-
     this.player.pause();
   }
 
-  play(stream: Readable) {
+  play(song: Song) {
     this.player.play(
-      createAudioResource(stream, {
+      createAudioResource(song.data, {
         inputType: StreamType.Arbitrary,
       }),
     );
   }
 
   unpause() {
-    if (!this.connection) {
-      throw new Error('Not connected');
-    }
-
     this.player.unpause();
   }
 }

@@ -10,11 +10,11 @@ import {
 import { inject, injectable } from 'tsyringe';
 
 @injectable()
-export class PauseCommand extends Command {
+export class ResumeCommand extends Command {
   constructor(
     @inject(PlayerBuilder) private readonly playerBuilder: PlayerBuilder,
   ) {
-    super('pause', 'Pause the current song');
+    super('resume', 'Resume the current song');
   }
 
   async execute(
@@ -30,9 +30,9 @@ export class PauseCommand extends Command {
         );
       }
 
-      this.playerBuilder.get(channel).pause();
+      this.playerBuilder.get(channel).unpause();
 
-      return await interaction.reply(`Paused`);
+      return await interaction.reply(`Resumed`);
     } catch (err) {
       console.error(err);
 

@@ -1,33 +1,32 @@
 import 'reflect-metadata';
+import { ClearChannel } from '@commands/clear-channel';
 import { PauseCommand } from '@commands/pause-command';
 import { PlayCommand } from '@commands/play-command';
-import { UnpauseCommand } from '@commands/unpause';
-import { WipeChannelCommand } from '@commands/wipe-channel';
+import { ResumeCommand } from '@commands/resume-command';
+import { Client } from '@utils/client';
 import { CommandsBuilder } from '@utils/commands-builder';
-import { Client, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
+import { PlayerBuilder } from '@utils/player-builder';
+import { Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { container } from 'tsyringe';
 
-import { clientId, guildId, token } from './configs/bot-config.json';
+import { clientId, token } from './configs/bot-config.json';
 
 async function main() {
-  const playCommand = container.resolve(PlayCommand);
-  const wipeChannelCommand = container.resolve(WipeChannelCommand);
-  const pauseCommand = container.resolve(PauseCommand);
-  const unpauseCommand = container.resolve(UnpauseCommand);
-
   const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
   });
 
   const commands = new CommandsBuilder()
-    .add(playCommand)
-    .add(wipeChannelCommand)
-    .add(pauseCommand)
-    .add(unpauseCommand)
+    .add(container.resolve(PlayCommand))
+    .add(container.resolve(ClearChannel))
+    .add(container.resolve(PauseCommand))
+    .add(container.resolve(ResumeCommand))
     .install(client);
 
+  container.resolve(PlayerBuilder).install(client);
+
   client.once(Events.ClientReady, (readyClient) => {
-    console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+    console.log(`Logged in as ${readyClient.user.tag}`);
   });
 
   const rest = new REST({ version: '10' }).setToken(token);
@@ -35,7 +34,7 @@ async function main() {
   try {
     console.log('Registering commands on Discord');
 
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+    await rest.put(Routes.applicationCommands(clientId), {
       body: commands.toJSON(),
     });
   } catch (err) {
