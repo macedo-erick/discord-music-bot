@@ -1,17 +1,17 @@
 import ytdl from '@distube/ytdl-core';
 import ytsr from '@distube/ytsr';
-import { Song } from '@models/song';
+import { TrackData } from '@models/track';
 import { injectable } from 'tsyringe';
 
 @injectable()
 export class YoutubeService {
-  async download(query: string): Promise<Song> {
+  async download(query: string): Promise<TrackData> {
     return query.startsWith('http')
       ? this.downloadFromUrl(query)
       : this.downloadByQuery(query);
   }
 
-  private async downloadByQuery(query: string): Promise<Song> {
+  private async downloadByQuery(query: string): Promise<TrackData> {
     const { items } = await ytsr(query, { limit: 1 });
 
     if (!items.length) {
@@ -23,7 +23,7 @@ export class YoutubeService {
     return this.downloadFromUrl(url);
   }
 
-  private async downloadFromUrl(url: string): Promise<Song> {
+  private async downloadFromUrl(url: string): Promise<TrackData> {
     const {
       videoDetails: { lengthSeconds, thumbnails, title },
     } = await ytdl.getBasicInfo(url);

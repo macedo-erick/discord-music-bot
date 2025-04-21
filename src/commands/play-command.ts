@@ -1,8 +1,7 @@
 import { defaultAvatar } from '@configs/bot-config.json';
 import { YoutubeService } from '@services/youtube-service';
 import { Command } from '@utils/command';
-import { PlayerBuilder } from '@utils/player-builder';
-import { VoiceChannelNotConnectedEmbed } from '@utils/voice-channel-not-connected-embed';
+import { VoiceChannelNotConnectedEmbed } from '@utils/embed';
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
@@ -10,6 +9,8 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
+
+import { PlayerBuilder } from '../builders/player-builder';
 
 @injectable()
 export class PlayCommand extends Command {
@@ -49,7 +50,7 @@ export class PlayCommand extends Command {
         .setAuthor({
           iconURL:
             interactionMember.user.avatarURL({ size: 16 }) ?? defaultAvatar,
-          name: `Adding the Song to Queue #${queuePosition}`,
+          name: `Adding the song to queue #${queuePosition}`,
         })
         .setDescription(`${song.title} [${song.duration}]`);
 

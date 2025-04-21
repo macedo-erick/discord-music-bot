@@ -8,7 +8,7 @@ import {
   VoiceConnection,
   VoiceConnectionStatus,
 } from '@discordjs/voice';
-import { Song } from '@models/song';
+import { TrackData } from '@models/track';
 import { VoiceBasedChannel } from 'discord.js';
 import { injectable } from 'tsyringe';
 
@@ -21,7 +21,7 @@ export class PlayerService {
     },
   });
 
-  private queue: Song[] = [];
+  private queue: TrackData[] = [];
 
   constructor(channel: VoiceBasedChannel) {
     this.connection = joinVoiceChannel({
@@ -53,24 +53,21 @@ export class PlayerService {
     this.player.pause();
   }
 
-  play(song: Song): number {
+  play(song: TrackData): number {
     const isIdle = this.player.state.status === AudioPlayerStatus.Idle;
 
     if (isIdle) {
       this._playResource(song);
-      return 1;
     }
 
-    this.queue.push(song);
-
-    return this.queue.length + 1;
+    return this.queue.push(song);
   }
 
   unpause() {
     this.player.unpause();
   }
 
-  private _playResource(song: Song) {
+  private _playResource(song: TrackData) {
     const resource = createAudioResource(song.data, {
       inputType: StreamType.Arbitrary,
     });

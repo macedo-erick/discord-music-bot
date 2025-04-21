@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream';
 
-export interface Song {
+export interface TrackData {
   data: Readable;
   duration: string;
   thumbnail: string;

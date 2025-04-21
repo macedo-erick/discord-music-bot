@@ -1,12 +1,13 @@
 import { Command } from '@utils/command';
-import { PlayerBuilder } from '@utils/player-builder';
-import { VoiceChannelNotConnectedEmbed } from '@utils/voice-channel-not-connected-embed';
+import { VoiceChannelNotConnectedEmbed } from '@utils/embed';
 import {
   ChatInputCommandInteraction,
   GuildMember,
   MessageFlags,
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
+
+import { PlayerBuilder } from '../builders/player-builder';
 
 @injectable()
 export class ResumeCommand extends Command {

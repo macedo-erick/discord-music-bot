@@ -1,14 +1,16 @@
 import 'reflect-metadata';
-import { ClearChannelCommand } from '@commands/clear-channel-command';
+import { ClearCommand } from '@commands/clear-command';
 import { PauseCommand } from '@commands/pause-command';
 import { PlayCommand } from '@commands/play-command';
 import { ResumeCommand } from '@commands/resume-command';
 import { clientId, guildId, token } from '@configs/bot-config.json';
 import { Client } from '@utils/client';
-import { CommandsBuilder } from '@utils/commands-builder';
-import { PlayerBuilder } from '@utils/player-builder';
 import { Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { container } from 'tsyringe';
+
+import { CommandsBuilder } from './builders/commands-builder';
+import { PlayerBuilder } from './builders/player-builder';
+
 import 'dotenv/config';
 
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -33,7 +35,7 @@ async function main() {
   const commandsBuilder = new CommandsBuilder();
 
   const playCommand = container.resolve(PlayCommand);
-  const clearChannelCommand = container.resolve(ClearChannelCommand);
+  const clearChannelCommand = container.resolve(ClearCommand);
   const pauseCommand = container.resolve(PauseCommand);
   const resumeCommand = container.resolve(ResumeCommand);
 
