@@ -3,3 +3,4 @@
 /src/configs/
 .idea/
 /docs/
+/.env

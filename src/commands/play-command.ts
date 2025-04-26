@@ -1,4 +1,3 @@
-import { defaultAvatar } from '@configs/bot-config.json';
 import { YoutubeService } from '@services/youtube-service';
 import { Command } from '@utils/command';
 import { VoiceChannelNotConnectedEmbed } from '@utils/embed';
@@ -11,6 +10,8 @@ import {
 import { inject, injectable } from 'tsyringe';
 
 import { PlayerBuilder } from '../builders/player-builder';
+
+import 'dotenv/config';
 
 @injectable()
 export class PlayCommand extends Command {
@@ -43,13 +44,14 @@ export class PlayCommand extends Command {
       const song = await this.youtubeService.download(query);
 
       const player = this.playerBuilder.get(channel);
-      const queuePosition = player.play(song);
+      const queuePosition = player.play(song) + 1;
 
       const embed = new EmbedBuilder()
         .setColor(0x1ed760)
         .setAuthor({
           iconURL:
-            interactionMember.user.avatarURL({ size: 16 }) ?? defaultAvatar,
+            interactionMember.user.avatarURL({ size: 16 }) ??
+            process.env.DEFAULT_AVATAR,
           name: `Adding the song to queue #${queuePosition}`,
         })
         .setDescription(`${song.title} [${song.duration}]`);
