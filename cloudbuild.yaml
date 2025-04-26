@@ -10,6 +10,7 @@ steps:
       '--build-arg', 'GUILD_ID=${_GUILD_ID}',
       '.'
     ]
+    secretEnv: ['_APP_TOKEN', '_CLIENT_ID', '_GUILD_ID']
     id: 'build-image'
     timeout: 600s
 

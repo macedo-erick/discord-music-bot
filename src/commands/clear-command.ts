@@ -1,62 +1,70 @@
+import { PlayerFacadeService } from '@services/player-facade-service';
 import { Command } from '@utils/command';
 import {
-  Channel,
   ChatInputCommandInteraction,
+  GuildMember,
+  InteractionResponse,
   MessageFlags,
-  PermissionFlagsBits,
-  TextChannel,
+  VoiceBasedChannel,
 } from 'discord.js';
+import { inject, injectable } from 'tsyringe';
 
+/**
+ * Command to clear the current song queue
+ */
+@injectable()
 export class ClearCommand extends Command {
-  private static readonly DELETE_FAIL_MESSAGE = 'Could not delete messages.';
-  private static readonly TEXT_CHANNEL_ONLY_MESSAGE =
-    'This command works only in text channels';
-
-  constructor() {
-    super('clear', 'ClearCommand messages from text channel', (builder) =>
-      builder
-        .addStringOption((option) =>
-          option
-            .setName('amount')
-            .setDescription('Amount of messages to be deleted')
-            .setRequired(true),
-        )
-        .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
-    );
+  /**
+   * Creates a new instance of the ClearCommand
+   * @param playerFacade The player facade service for managing music playback
+   */
+  constructor(
+    @inject(PlayerFacadeService)
+    private readonly playerFacade: PlayerFacadeService,
+  ) {
+    super('clear', 'Clear the current queue');
   }
 
-  private static readonly DELETE_SUCCESS_MESSAGE = (count: number): string =>
-    `Deleted ${count} messages.`;
-
-  async execute(interaction: ChatInputCommandInteraction) {
-    const channel = interaction.channel as Channel;
-
-    if (!this.isTextChannel(channel)) {
-      return interaction.reply({
-        content: ClearCommand.TEXT_CHANNEL_ONLY_MESSAGE,
-        flags: MessageFlags.Ephemeral,
-      });
-    }
-
+  /**
+   * Executes the clear command to remove all songs from the queue
+   * @param interaction The Discord interaction that triggered this command
+   * @returns A Discord interaction response with the result
+   */
+  async execute(
+    interaction: ChatInputCommandInteraction,
+  ): Promise<InteractionResponse> {
     try {
-      const amount = Number(interaction.options.getString('amount', true));
-      const deletedMessages = await channel.bulkDelete(amount, true);
+      const voiceChannel = this.getVoiceChannel(interaction);
 
-      return await interaction.reply({
-        content: ClearCommand.DELETE_SUCCESS_MESSAGE(deletedMessages.size),
-        flags: MessageFlags.Ephemeral,
-      });
+      if (!voiceChannel) {
+        return await interaction.reply({
+          embeds: [this.playerFacade.getVoiceChannelNotConnectedEmbed()],
+        });
+      }
+
+      const member = interaction.member as GuildMember;
+      const embed = this.playerFacade.clearQueue(member, voiceChannel);
+
+      return await interaction.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-
-      return interaction.reply({
-        content: ClearCommand.DELETE_FAIL_MESSAGE,
+      console.error('Error executing ClearCommand:', error);
+      return await interaction.reply({
+        content: 'Something went wrong.',
         flags: MessageFlags.Ephemeral,
       });
     }
   }
 
-  private isTextChannel(channel: Channel): channel is TextChannel {
-    return channel.isTextBased() && !channel.isVoiceBased();
+  /**
+   * Gets the voice channel that the user is currently connected to
+   * @param interaction The Discord interaction that triggered this command
+   * @returns The voice channel or null if the user is not in a voice channel
+   */
+  private getVoiceChannel(
+    interaction: ChatInputCommandInteraction,
+  ): null | VoiceBasedChannel {
+    const member = interaction.member as GuildMember;
+    if (!member.voice.channel) return null;
+    return member.voice.channel;
   }
 }

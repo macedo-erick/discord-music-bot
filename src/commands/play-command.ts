@@ -8,8 +8,15 @@ import {
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
 
+/**
+ * Command to play a song from a query or URL
+ */
 @injectable()
 export class PlayCommand extends Command {
+  /**
+   * Creates a new instance of the PlayCommand
+   * @param playerFacade The player facade service for managing music playback
+   */
   constructor(
     @inject(PlayerFacadeService)
     private readonly playerFacade: PlayerFacadeService,
@@ -24,9 +31,15 @@ export class PlayCommand extends Command {
     );
   }
 
+  /**
+   * Executes the play command to add a song to the queue and start playback
+   * @param interaction The Discord interaction that triggered this command
+   * @returns A Discord interaction response with the result
+   */
   async execute(interaction: ChatInputCommandInteraction) {
     try {
       const voiceChannel = this.getVoiceChannel(interaction);
+
       if (!voiceChannel) {
         return await interaction.reply({
           embeds: [this.playerFacade.getVoiceChannelNotConnectedEmbed()],
@@ -52,6 +65,11 @@ export class PlayCommand extends Command {
     }
   }
 
+  /**
+   * Gets the voice channel that the user is currently connected to
+   * @param interaction The Discord interaction that triggered this command
+   * @returns The voice channel or null if the user is not in a voice channel
+   */
   private getVoiceChannel(
     interaction: ChatInputCommandInteraction,
   ): null | VoiceBasedChannel {
