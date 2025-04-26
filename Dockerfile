@@ -12,14 +12,10 @@ RUN yarn install --frozen-lockfile
 
 COPY . .
 
-ARG APP_TOKEN
-ARG CLIENT_ID
-ARG GUILD_ID
-
-ENV NODE_ENV=production
-ENV APP_TOKEN=${APP_TOKEN}
-ENV CLIENT_ID=${CLIENT_ID}
-ENV GUILD_ID=${GUILD_ID}
+ENV NODE_ENV=production \
+    APP_TOKEN=${APP_TOKEN} \
+    CLIENT_ID=${CLIENT_ID} \
+    GUILD_ID=${GUILD_ID}
 
 CMD ["yarn", "start"]
 

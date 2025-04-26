@@ -2,15 +2,17 @@ timeout: 1800s
 
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'build',
-      '-t', '${_IMAGE_NAME}',
-      '--build-arg', 'APP_TOKEN=${_APP_TOKEN}',
-      '--build-arg', 'CLIENT_ID=${_CLIENT_ID}',
-      '--build-arg', 'GUILD_ID=${_GUILD_ID}',
-      '.'
-    ]
-    secretEnv: [ '_APP_TOKEN', '_CLIENT_ID', '_GUILD_ID' ]
+    entrypoint: 'bash'
+    secretEnv: [ 'APP_TOKEN', 'CLIENT_ID', 'GUILD_ID' ]
+    args:
+      [ '-c',
+        "docker build
+          --build-arg APP_TOKEN=$$APP_TOKEN
+          --build-arg CLIENT_ID=$$CLIENT_ID
+          --build-arg GUILD_ID=$$GUILD_ID
+          -t ${_IMAGE_NAME}
+          ."
+      ]
     id: 'build-image'
     timeout: 600s
 
@@ -36,8 +38,8 @@ options:
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/APP_TOKEN/versions/latest
-      env: '_APP_TOKEN'
+      env: 'APP_TOKEN'
     - versionName: projects/$PROJECT_ID/secrets/CLIENT_ID/versions/latest
-      env: '_CLIENT_ID'
+      env: 'CLIENT_ID'
     - versionName: projects/$PROJECT_ID/secrets/GUILD_ID/versions/latest
-      env: '_GUILD_ID'
+      env: 'GUILD_ID'
