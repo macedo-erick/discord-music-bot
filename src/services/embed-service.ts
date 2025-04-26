@@ -6,7 +6,7 @@ import { injectable } from 'tsyringe';
 @injectable()
 export class EmbedService {
   public static readonly DEFAULT_AVATAR_URL =
-    'https://static.vecteezy.com/system/resources/thumbnails/036/280/651/small_2x/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg';
+    'https://storage.googleapis.com/soundwave_bot/avatar.png';
   private static readonly DEFAULT_COLOR = 0x1ed760;
   private static readonly ERROR_COLOR = 0xff0000;
 

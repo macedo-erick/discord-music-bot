@@ -48,6 +48,8 @@ export class PlayerService {
 
   private _state: PlayerState = PlayerState.IDLE;
 
+  private channel: VoiceBasedChannel;
+
   private connection: null | VoiceConnection = null;
 
   private currentTrack: null | TrackData = null;
@@ -61,7 +63,7 @@ export class PlayerService {
   private queue: TrackData[] = [];
 
   constructor(channel: VoiceBasedChannel) {
-    this.initializeConnection(channel);
+    this.channel = channel;
     this.initializeEventListeners();
   }
 
@@ -93,7 +95,8 @@ export class PlayerService {
    */
   pause(): void {
     try {
-      if (this.state !== PlayerState.PLAYING) {
+      // If not connected or not playing, do nothing
+      if (!this.connection || this.state !== PlayerState.PLAYING) {
         return;
       }
 
@@ -117,6 +120,11 @@ export class PlayerService {
         throw new Error(`Cannot play in state: ${this.state}`);
       }
 
+      // Initialize connection if not already connected
+      if (!this.connection) {
+        this.initializeConnection(this.channel);
+      }
+
       const isIdle = this.player.state.status === AudioPlayerStatus.Idle;
 
       if (isIdle) {
@@ -136,9 +144,11 @@ export class PlayerService {
    */
   skip(): void {
     try {
+      // If not connected or no current track, do nothing
       if (
-        this.state !== PlayerState.PLAYING &&
-        this.state !== PlayerState.PAUSED
+        !this.connection ||
+        (this.state !== PlayerState.PLAYING &&
+          this.state !== PlayerState.PAUSED)
       ) {
         return;
       }
@@ -161,7 +171,8 @@ export class PlayerService {
    */
   unpause(): void {
     try {
-      if (this.state !== PlayerState.PAUSED) {
+      // If not connected or not paused, do nothing
+      if (!this.connection || this.state !== PlayerState.PAUSED) {
         return;
       }
 
@@ -191,6 +202,19 @@ export class PlayerService {
         guildId: channel.guild.id,
       });
 
+      // Set up connection event listeners
+      this.connection.on(VoiceConnectionStatus.Ready, () => {
+        this.connection?.subscribe(this.player);
+      });
+
+      this.connection.on(VoiceConnectionStatus.Disconnected, () => {
+        this.setState(PlayerState.DISCONNECTED);
+      });
+
+      this.connection.on('error', (error) => {
+        this.handleError('Connection error', error);
+      });
+
       this.setState(PlayerState.IDLE);
     } catch (error) {
       this.handleError('Failed to initialize connection', error);
@@ -201,21 +225,6 @@ export class PlayerService {
    * Initialize event listeners for the player and connection
    */
   private initializeEventListeners(): void {
-    if (!this.connection) return;
-
-    // Connection events
-    this.connection.on(VoiceConnectionStatus.Ready, () => {
-      this.connection?.subscribe(this.player);
-    });
-
-    this.connection.on(VoiceConnectionStatus.Disconnected, () => {
-      this.setState(PlayerState.DISCONNECTED);
-    });
-
-    this.connection.on('error', (error) => {
-      this.handleError('Connection error', error);
-    });
-
     // Player events
     this.player.on(AudioPlayerStatus.Idle, () => {
       this.currentTrack = null;
