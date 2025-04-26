@@ -1,9 +1,7 @@
-import { TrackData } from '@models/track';
 import { Command } from '@utils/command';
 import { VoiceChannelNotConnectedEmbed } from '@utils/embed';
 import {
   ChatInputCommandInteraction,
-  EmbedBuilder,
   GuildMember,
   InteractionResponse,
   MessageFlags,
@@ -12,14 +10,13 @@ import {
 import { inject, injectable } from 'tsyringe';
 
 import { PlayerBuilder } from '../builders/player-builder';
+import { EmbedService } from '../services/embed-service';
 
 @injectable()
 export class NowPlayingCommand extends Command {
-  private static readonly DEFAULT_AVATAR_URL = process.env.DEFAULT_AVATAR || '';
-  private static readonly EMBED_COLOR = 0x1ed760;
-
   constructor(
     @inject(PlayerBuilder) private readonly playerService: PlayerBuilder,
+    @inject(EmbedService) private readonly embedService: EmbedService,
   ) {
     super('now-playing', 'Show the current playing song');
   }
@@ -35,8 +32,7 @@ export class NowPlayingCommand extends Command {
         });
       }
 
-      const song = this.playerService.get(voiceChannel).nowPlaying;
-      const embed = this.createNowPlayingEmbed(song);
+      const embed = this.embedService.createNowPlayingEmbed(voiceChannel);
 
       return await interaction.reply({ embeds: [embed] });
     } catch (error) {
@@ -46,20 +42,6 @@ export class NowPlayingCommand extends Command {
         flags: MessageFlags.Ephemeral,
       });
     }
-  }
-
-  private createNowPlayingEmbed(song: null | TrackData): EmbedBuilder {
-    return new EmbedBuilder()
-      .setColor(NowPlayingCommand.EMBED_COLOR)
-      .setAuthor({
-        iconURL: NowPlayingCommand.DEFAULT_AVATAR_URL,
-        name: song ? `Now Playing` : 'Nothing is Playing!',
-      })
-      .setDescription(
-        song
-          ? `Now playing ${song.title} [${song.duration}]`
-          : 'Songs must be playing to use that command. The queue is currently empty! Add songs using: /play command.',
-      );
   }
 
   private getVoiceChannel(

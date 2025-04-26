@@ -1,9 +1,7 @@
-import { TrackData } from '@models/track';
 import { Command } from '@utils/command';
 import { VoiceChannelNotConnectedEmbed } from '@utils/embed';
 import {
   ChatInputCommandInteraction,
-  EmbedBuilder,
   GuildMember,
   InteractionResponse,
   MessageFlags,
@@ -12,13 +10,13 @@ import {
 import { inject, injectable } from 'tsyringe';
 
 import { PlayerBuilder } from '../builders/player-builder';
+import { EmbedService } from '../services/embed-service';
 
 @injectable()
 export class SkipCommand extends Command {
-  private static readonly EMBED_COLOR = 0x1ed760;
-
   constructor(
     @inject(PlayerBuilder) private readonly playerService: PlayerBuilder,
+    @inject(EmbedService) private readonly embedService: EmbedService,
   ) {
     super('skip', 'Skip the current song');
   }
@@ -38,8 +36,11 @@ export class SkipCommand extends Command {
       const player = this.playerService.get(voiceChannel);
       player.skip();
 
+      const member = interaction.member as GuildMember;
+      const embed = this.embedService.createSkipEmbed(member, voiceChannel);
+
       return await interaction.reply({
-        embeds: [this.buildSkipEmbed(interaction, player.nowPlaying)],
+        embeds: [embed],
       });
     } catch (err) {
       console.error('Failed to execute skip command:', err);
@@ -49,29 +50,6 @@ export class SkipCommand extends Command {
         flags: MessageFlags.Ephemeral,
       });
     }
-  }
-
-  private buildSkipEmbed(
-    interaction: ChatInputCommandInteraction,
-    song: null | TrackData,
-  ): EmbedBuilder {
-    const member = interaction.member as GuildMember;
-    const avatarURL =
-      member.user.avatarURL({ size: 16 }) ?? process.env.DEFAULT_AVATAR;
-
-    return new EmbedBuilder()
-      .setColor(SkipCommand.EMBED_COLOR)
-      .setAuthor({
-        iconURL: avatarURL,
-        name: song
-          ? 'Nothing is Playing!'
-          : 'Skipped the song to the next one in queue',
-      })
-      .setDescription(
-        song
-          ? `Now playing ${song.title} [${song.duration}]`
-          : 'Songs must be playing to use that command. The queue is currently empty! Add songs using: /play command.',
-      );
   }
 
   private getVoiceChannel(
