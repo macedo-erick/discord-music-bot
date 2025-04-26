@@ -42,6 +42,36 @@ export class PlayerFacadeService {
   }
 
   /**
+   * Clears the current song queue and skips the current song
+   * @param member The guild member who cleared the queue
+   * @param voiceChannel The voice channel where the player is active
+   * @returns A Discord EmbedBuilder with the result
+   */
+  clearQueue(member: GuildMember, voiceChannel: VoiceBasedChannel) {
+    try {
+      const player = this.playerBuilder.get(voiceChannel);
+      const song = player.nowPlaying;
+
+      if (!song || player.state === PlayerState.IDLE) {
+        return this.embedService.createNothingPlayingEmbed();
+      }
+
+      const avatarURL =
+        member.user.avatarURL({ size: 16 }) ?? EmbedService.DEFAULT_AVATAR_URL;
+
+      const queueLength = player.currentQueue.length;
+
+      player.clearQueue();
+      player.skip();
+
+      return this.embedService.createClearQueueEmbed(avatarURL, queueLength);
+    } catch (error) {
+      console.error('Error clearing queue:', error);
+      return this.embedService.createNothingPlayingEmbed();
+    }
+  }
+
+  /**
    * Gets the current playing song embed
    * @param voiceChannel The voice channel where the player is active
    * @returns A Discord EmbedBuilder with the current song information

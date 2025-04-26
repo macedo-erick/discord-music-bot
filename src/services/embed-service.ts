@@ -3,12 +3,46 @@ import { EmbedBuilder as DiscordEmbedBuilder } from 'discord.js';
 import 'dotenv/config';
 import { injectable } from 'tsyringe';
 
+/**
+ * Service for creating and managing Discord embed messages
+ * Provides methods to create various types of embeds for different bot responses
+ */
 @injectable()
 export class EmbedService {
+  /**
+   * Default avatar URL used when no user avatar is available
+   */
   public static readonly DEFAULT_AVATAR_URL =
     'https://storage.googleapis.com/soundwave_bot/avatar.png';
-  private static readonly DEFAULT_COLOR = 0x1ed760;
-  private static readonly ERROR_COLOR = 0xff0000;
+  /**
+   * Default color for standard embeds (Spotify green)
+   */
+  public static readonly DEFAULT_COLOR = 0x1ed760;
+  /**
+   * Color used for error embeds (red)
+   */
+  public static readonly ERROR_COLOR = 0xff0000;
+
+  /**
+   * Creates an embed for when the queue has been cleared
+   * @param avatarURL The URL of the user's avatar who cleared the queue
+   * @param queueLength The number of songs that were removed from the queue
+   * @returns A Discord EmbedBuilder with the clear queue message
+   */
+  createClearQueueEmbed(
+    avatarURL: string,
+    queueLength: number,
+  ): DiscordEmbedBuilder {
+    return new DiscordEmbedBuilder()
+      .setColor(EmbedService.DEFAULT_COLOR)
+      .setAuthor({
+        iconURL: avatarURL,
+        name: 'Cleared the Queue!',
+      })
+      .setDescription(
+        `The queue is now empty. ${queueLength} songs were removed from the queue.`,
+      );
+  }
 
   /**
    * Creates an error embed
