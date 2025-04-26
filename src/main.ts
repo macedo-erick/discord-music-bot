@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+import { CommandsBuilder } from '@builders/commands-builder';
+import { PlayerBuilder } from '@builders/player-builder';
 import { ClearCommand } from '@commands/clear-command';
 import { NowPlayingCommand } from '@commands/now-playing-command';
 import { PauseCommand } from '@commands/pause-command';
@@ -6,12 +8,9 @@ import { PlayCommand } from '@commands/play-command';
 import { ResumeCommand } from '@commands/resume-command';
 import { SkipCommand } from '@commands/skip-command';
 import { Client } from '@utils/client';
+import 'dotenv/config';
 import { Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { container } from 'tsyringe';
-import 'dotenv/config';
-
-import { CommandsBuilder } from './builders/commands-builder';
-import { PlayerBuilder } from './builders/player-builder';
 
 const TOKEN = String(process.env.APP_TOKEN);
 const CLIENT_ID = String(process.env.CLIENT_ID);
