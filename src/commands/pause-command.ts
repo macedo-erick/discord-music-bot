@@ -1,5 +1,5 @@
+import { PlayerFacadeService } from '@services/player-facade-service';
 import { Command } from '@utils/command';
-import { VoiceChannelNotConnectedEmbed } from '@utils/embed';
 import {
   ChatInputCommandInteraction,
   GuildMember,
@@ -8,14 +8,11 @@ import {
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
 
-import { PlayerBuilder } from '../builders/player-builder';
-import { EmbedService } from '../services/embed-service';
-
 @injectable()
 export class PauseCommand extends Command {
   constructor(
-    @inject(PlayerBuilder) private readonly playerService: PlayerBuilder,
-    @inject(EmbedService) private readonly embedService: EmbedService,
+    @inject(PlayerFacadeService)
+    private readonly playerFacade: PlayerFacadeService,
   ) {
     super('pause', 'Pause the current song');
   }
@@ -25,15 +22,12 @@ export class PauseCommand extends Command {
       const voiceChannel = this.getVoiceChannel(interaction);
       if (!voiceChannel) {
         return await interaction.reply({
-          embeds: [new VoiceChannelNotConnectedEmbed()],
+          embeds: [this.playerFacade.getVoiceChannelNotConnectedEmbed()],
         });
       }
 
-      const player = this.playerService.get(voiceChannel);
-      player.pause();
-
       const member = interaction.member as GuildMember;
-      const embed = this.embedService.createPauseEmbed(member, voiceChannel);
+      const embed = this.playerFacade.pauseSong(member, voiceChannel);
 
       return await interaction.reply({ embeds: [embed] });
     } catch (err) {

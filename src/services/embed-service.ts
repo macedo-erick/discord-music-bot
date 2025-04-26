@@ -1,24 +1,14 @@
 import { TrackData } from '@models/track';
-import {
-  EmbedBuilder as DiscordEmbedBuilder,
-  GuildMember,
-  VoiceBasedChannel,
-} from 'discord.js';
-import { inject, injectable } from 'tsyringe';
+import { EmbedBuilder as DiscordEmbedBuilder } from 'discord.js';
 import 'dotenv/config';
-
-import { PlayerBuilder } from '../builders/player-builder';
-import { PlayerState } from './player-service';
+import { injectable } from 'tsyringe';
 
 @injectable()
 export class EmbedService {
-  private static readonly DEFAULT_AVATAR_URL = process.env.DEFAULT_AVATAR || '';
+  public static readonly DEFAULT_AVATAR_URL =
+    'https://static.vecteezy.com/system/resources/thumbnails/036/280/651/small_2x/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg';
   private static readonly DEFAULT_COLOR = 0x1ed760;
   private static readonly ERROR_COLOR = 0xff0000;
-
-  constructor(
-    @inject(PlayerBuilder) private readonly playerBuilder: PlayerBuilder,
-  ) {}
 
   /**
    * Creates an error embed
@@ -37,81 +27,63 @@ export class EmbedService {
   }
 
   /**
-   * Creates a now playing embed
-   * @param voiceChannel The voice channel to check for playing status
+   * Creates a "nothing is playing" embed
    * @returns A Discord EmbedBuilder
    */
-  createNowPlayingEmbed(voiceChannel: VoiceBasedChannel): DiscordEmbedBuilder {
-    try {
-      const player = this.playerBuilder.get(voiceChannel);
-      const song = player.nowPlaying;
+  createNothingPlayingEmbed(): DiscordEmbedBuilder {
+    return new DiscordEmbedBuilder()
+      .setColor(EmbedService.DEFAULT_COLOR)
+      .setAuthor({
+        iconURL: EmbedService.DEFAULT_AVATAR_URL,
+        name: 'Nothing is Playing!',
+      })
+      .setDescription(
+        'Songs must be playing to use that command. The queue is currently empty! Add songs using: /play command.',
+      );
+  }
 
-      if (!song || player.state === PlayerState.IDLE) {
-        return this.createNothingPlayingEmbed();
-      }
-
-      return new DiscordEmbedBuilder()
-        .setColor(EmbedService.DEFAULT_COLOR)
-        .setAuthor({
-          iconURL: EmbedService.DEFAULT_AVATAR_URL,
-          name: 'Now Playing',
-        })
-        .setDescription(`Now playing ${song.title} [${song.duration}]`);
-    } catch (error) {
-      console.error('Error creating now playing embed:', error);
-      return this.createNothingPlayingEmbed();
-    }
+  /**
+   * Creates a now playing embed
+   * @param song The song that is currently playing
+   * @returns A Discord EmbedBuilder
+   */
+  createNowPlayingEmbed(song: TrackData): DiscordEmbedBuilder {
+    return new DiscordEmbedBuilder()
+      .setColor(EmbedService.DEFAULT_COLOR)
+      .setAuthor({
+        iconURL: EmbedService.DEFAULT_AVATAR_URL,
+        name: 'Now Playing',
+      })
+      .setDescription(`Now playing ${song.title} [${song.duration}]`);
   }
 
   /**
    * Creates a pause embed
-   * @param member The guild member who paused the song
-   * @param voiceChannel The voice channel to check for playing status
+   * @param avatarURL The URL of the user's avatar
    * @returns A Discord EmbedBuilder
    */
-  createPauseEmbed(
-    member: GuildMember,
-    voiceChannel: VoiceBasedChannel,
-  ): DiscordEmbedBuilder {
-    try {
-      const player = this.playerBuilder.get(voiceChannel);
-      const song = player.nowPlaying;
-
-      if (!song || player.state === PlayerState.IDLE) {
-        return this.createNothingPlayingEmbed();
-      }
-
-      const avatarURL =
-        member.user.avatarURL({ size: 16 }) ?? EmbedService.DEFAULT_AVATAR_URL;
-
-      return new DiscordEmbedBuilder()
-        .setColor(EmbedService.DEFAULT_COLOR)
-        .setAuthor({
-          iconURL: avatarURL,
-          name: 'Paused',
-        })
-        .setDescription('The current song has been paused.');
-    } catch (error) {
-      console.error('Error creating pause embed:', error);
-      return this.createNothingPlayingEmbed();
-    }
+  createPauseEmbed(avatarURL: string): DiscordEmbedBuilder {
+    return new DiscordEmbedBuilder()
+      .setColor(EmbedService.DEFAULT_COLOR)
+      .setAuthor({
+        iconURL: avatarURL,
+        name: 'Paused',
+      })
+      .setDescription('The current song has been paused.');
   }
 
   /**
    * Creates a play embed
-   * @param member The guild member who added the song
+   * @param avatarURL The URL of the user's avatar
    * @param song The song that was added
    * @param queuePosition The position in the queue
    * @returns A Discord EmbedBuilder
    */
   createPlayEmbed(
-    member: GuildMember,
+    avatarURL: string,
     song: TrackData,
     queuePosition: number,
   ): DiscordEmbedBuilder {
-    const avatarURL =
-      member.user.avatarURL({ size: 16 }) ?? EmbedService.DEFAULT_AVATAR_URL;
-
     return new DiscordEmbedBuilder()
       .setColor(EmbedService.DEFAULT_COLOR)
       .setAuthor({
@@ -123,85 +95,62 @@ export class EmbedService {
 
   /**
    * Creates a resume embed
-   * @param member The guild member who resumed the song
-   * @param voiceChannel The voice channel to check for playing status
+   * @param avatarURL The URL of the user's avatar
    * @returns A Discord EmbedBuilder
    */
-  createResumeEmbed(
-    member: GuildMember,
-    voiceChannel: VoiceBasedChannel,
-  ): DiscordEmbedBuilder {
-    try {
-      const player = this.playerBuilder.get(voiceChannel);
-      const song = player.nowPlaying;
-
-      if (!song || player.state === PlayerState.IDLE) {
-        return this.createNothingPlayingEmbed();
-      }
-
-      const avatarURL =
-        member.user.avatarURL({ size: 16 }) ?? EmbedService.DEFAULT_AVATAR_URL;
-
-      return new DiscordEmbedBuilder()
-        .setColor(EmbedService.DEFAULT_COLOR)
-        .setAuthor({
-          iconURL: avatarURL,
-          name: 'Resumed',
-        })
-        .setDescription('The current song has been resumed.');
-    } catch (error) {
-      console.error('Error creating resume embed:', error);
-      return this.createNothingPlayingEmbed();
-    }
+  createResumeEmbed(avatarURL: string): DiscordEmbedBuilder {
+    return new DiscordEmbedBuilder()
+      .setColor(EmbedService.DEFAULT_COLOR)
+      .setAuthor({
+        iconURL: avatarURL,
+        name: 'Resumed',
+      })
+      .setDescription('The current song has been resumed.');
   }
 
   /**
    * Creates a skip embed
-   * @param member The guild member who skipped the song
-   * @param voiceChannel The voice channel to check for playing status
+   * @param avatarURL The URL of the user's avatar
+   * @param nextSong The next song in the queue (if any)
    * @returns A Discord EmbedBuilder
    */
   createSkipEmbed(
-    member: GuildMember,
-    voiceChannel: VoiceBasedChannel,
+    avatarURL: string,
+    nextSong: null | TrackData,
   ): DiscordEmbedBuilder {
-    try {
-      const player = this.playerBuilder.get(voiceChannel);
-      const song = player.nowPlaying;
+    const embed = new DiscordEmbedBuilder()
+      .setColor(EmbedService.DEFAULT_COLOR)
+      .setAuthor({
+        iconURL: avatarURL,
+        name: 'Skipped the song',
+      });
 
-      if (!song || player.state === PlayerState.IDLE) {
-        return this.createNothingPlayingEmbed();
-      }
-
-      const avatarURL =
-        member.user.avatarURL({ size: 16 }) ?? EmbedService.DEFAULT_AVATAR_URL;
-
-      return new DiscordEmbedBuilder()
-        .setColor(EmbedService.DEFAULT_COLOR)
-        .setAuthor({
-          iconURL: avatarURL,
-          name: 'Skipped the song to the next one in queue',
-        })
-        .setDescription(`Now playing ${song.title} [${song.duration}]`);
-    } catch (error) {
-      console.error('Error creating skip embed:', error);
-      return this.createNothingPlayingEmbed();
+    if (nextSong) {
+      embed.setDescription(
+        `Now playing ${nextSong.title} [${nextSong.duration}]`,
+      );
+    } else {
+      embed.setDescription(
+        'The queue is now empty. Add more songs using: /play command.',
+      );
     }
+
+    return embed;
   }
 
   /**
-   * Creates a "nothing is playing" embed
+   * Creates an embed for when a user is not connected to a voice channel
    * @returns A Discord EmbedBuilder
    */
-  private createNothingPlayingEmbed(): DiscordEmbedBuilder {
+  createVoiceChannelNotConnectedEmbed(): DiscordEmbedBuilder {
     return new DiscordEmbedBuilder()
-      .setColor(EmbedService.DEFAULT_COLOR)
+      .setColor(EmbedService.ERROR_COLOR)
+      .setDescription(
+        'You must be connected to a voice channel on this server to use this command!',
+      )
       .setAuthor({
         iconURL: EmbedService.DEFAULT_AVATAR_URL,
-        name: 'Nothing is Playing!',
-      })
-      .setDescription(
-        'Songs must be playing to use that command. The queue is currently empty! Add songs using: /play command.',
-      );
+        name: 'Voice Channel Required',
+      });
   }
 }

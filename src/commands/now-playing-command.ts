@@ -1,5 +1,5 @@
+import { PlayerFacadeService } from '@services/player-facade-service';
 import { Command } from '@utils/command';
-import { VoiceChannelNotConnectedEmbed } from '@utils/embed';
 import {
   ChatInputCommandInteraction,
   GuildMember,
@@ -9,14 +9,11 @@ import {
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
 
-import { PlayerBuilder } from '../builders/player-builder';
-import { EmbedService } from '../services/embed-service';
-
 @injectable()
 export class NowPlayingCommand extends Command {
   constructor(
-    @inject(PlayerBuilder) private readonly playerService: PlayerBuilder,
-    @inject(EmbedService) private readonly embedService: EmbedService,
+    @inject(PlayerFacadeService)
+    private readonly playerFacade: PlayerFacadeService,
   ) {
     super('now-playing', 'Show the current playing song');
   }
@@ -28,11 +25,11 @@ export class NowPlayingCommand extends Command {
       const voiceChannel = this.getVoiceChannel(interaction);
       if (!voiceChannel) {
         return await interaction.reply({
-          embeds: [new VoiceChannelNotConnectedEmbed()],
+          embeds: [this.playerFacade.getVoiceChannelNotConnectedEmbed()],
         });
       }
 
-      const embed = this.embedService.createNowPlayingEmbed(voiceChannel);
+      const embed = this.playerFacade.getNowPlayingEmbed(voiceChannel);
 
       return await interaction.reply({ embeds: [embed] });
     } catch (error) {
