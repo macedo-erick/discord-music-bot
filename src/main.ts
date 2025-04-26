@@ -1,18 +1,20 @@
 import 'reflect-metadata';
+import { CommandsBuilder } from '@builders/commands-builder';
+import { PlayerBuilder } from '@builders/player-builder';
 import { ClearCommand } from '@commands/clear-command';
+import { NowPlayingCommand } from '@commands/now-playing-command';
 import { PauseCommand } from '@commands/pause-command';
 import { PlayCommand } from '@commands/play-command';
 import { ResumeCommand } from '@commands/resume-command';
-import { clientId, guildId, token } from '@configs/bot-config.json';
+import { SkipCommand } from '@commands/skip-command';
 import { Client } from '@utils/client';
+import 'dotenv/config';
 import { Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { container } from 'tsyringe';
 
-import { CommandsBuilder } from './builders/commands-builder';
-import { PlayerBuilder } from './builders/player-builder';
-
-import 'dotenv/config';
-
+const TOKEN = String(process.env.APP_TOKEN);
+const CLIENT_ID = String(process.env.CLIENT_ID);
+const GUILD_ID = String(process.env.GUILD_ID);
 const IS_PROD = process.env.NODE_ENV === 'production';
 const CLIENT_INTENTS = [
   GatewayIntentBits.Guilds,
@@ -21,7 +23,7 @@ const CLIENT_INTENTS = [
 const REST_API_VERSION = '10';
 
 function createRestClient(): REST {
-  return new REST({ version: REST_API_VERSION }).setToken(token);
+  return new REST({ version: REST_API_VERSION }).setToken(TOKEN);
 }
 
 function initializeClientEvents(client: Client) {
@@ -38,12 +40,16 @@ async function main() {
   const clearChannelCommand = container.resolve(ClearCommand);
   const pauseCommand = container.resolve(PauseCommand);
   const resumeCommand = container.resolve(ResumeCommand);
+  const skipCommand = container.resolve(SkipCommand);
+  const nowPlayingCommand = container.resolve(NowPlayingCommand);
 
   commandsBuilder
     .add(playCommand)
     .add(clearChannelCommand)
     .add(pauseCommand)
     .add(resumeCommand)
+    .add(skipCommand)
+    .add(nowPlayingCommand)
     .install(client);
 
   container.resolve(PlayerBuilder).install(client);
@@ -61,13 +67,13 @@ async function main() {
     );
   }
 
-  await client.login(token);
+  await client.login(TOKEN);
 }
 
 async function registerCommands(rest: REST, commands: CommandsBuilder) {
   const route = IS_PROD
-    ? Routes.applicationCommands(clientId)
-    : Routes.applicationGuildCommands(clientId, guildId);
+    ? Routes.applicationCommands(CLIENT_ID)
+    : Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID);
 
   const scope = IS_PROD ? 'global' : 'guild';
 

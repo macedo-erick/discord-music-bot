@@ -1,51 +1,46 @@
-import { PlayerFacadeService } from '@services/player-facade-service';
 import { Command } from '@utils/command';
 import {
   ChatInputCommandInteraction,
   GuildMember,
+  InteractionResponse,
   MessageFlags,
   VoiceBasedChannel,
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
 
+import { PlayerFacadeService } from '../services/player-facade-service';
+
 @injectable()
-export class PlayCommand extends Command {
+export class SkipCommand extends Command {
   constructor(
     @inject(PlayerFacadeService)
     private readonly playerFacade: PlayerFacadeService,
   ) {
-    super('play', 'Give the song name or URL to start playing', (builder) =>
-      builder.addStringOption((option) =>
-        option
-          .setName('query')
-          .setDescription('Give the song name or URL to start playing')
-          .setRequired(true),
-      ),
-    );
+    super('skip', 'Skip the current song');
   }
 
-  async execute(interaction: ChatInputCommandInteraction) {
+  async execute(
+    interaction: ChatInputCommandInteraction,
+  ): Promise<InteractionResponse> {
     try {
       const voiceChannel = this.getVoiceChannel(interaction);
+
       if (!voiceChannel) {
         return await interaction.reply({
           embeds: [this.playerFacade.getVoiceChannelNotConnectedEmbed()],
         });
       }
 
-      const query = interaction.options.getString('query', true);
       const member = interaction.member as GuildMember;
-      const embed = await this.playerFacade.playSong(
-        member,
-        voiceChannel,
-        query,
-      );
-
-      return await interaction.reply({ embeds: [embed] });
-    } catch (err) {
-      console.error('Failed to execute play command:', err);
+      const embed = this.playerFacade.skipSong(member, voiceChannel);
 
       return await interaction.reply({
+        embeds: [embed],
+      });
+    } catch (err) {
+      console.error('Failed to execute skip command:', err);
+
+      return interaction.reply({
         content: 'Something went wrong.',
         flags: MessageFlags.Ephemeral,
       });

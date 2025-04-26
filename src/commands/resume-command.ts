@@ -1,43 +1,50 @@
+import { PlayerFacadeService } from '@services/player-facade-service';
 import { Command } from '@utils/command';
-import { VoiceChannelNotConnectedEmbed } from '@utils/embed';
 import {
   ChatInputCommandInteraction,
   GuildMember,
   MessageFlags,
+  VoiceBasedChannel,
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
-
-import { PlayerBuilder } from '../builders/player-builder';
 
 @injectable()
 export class ResumeCommand extends Command {
   constructor(
-    @inject(PlayerBuilder) private readonly playerBuilder: PlayerBuilder,
+    @inject(PlayerFacadeService)
+    private readonly playerFacade: PlayerFacadeService,
   ) {
     super('resume', 'Resume the current song');
   }
 
   async execute(interaction: ChatInputCommandInteraction) {
     try {
-      const interactionMember = interaction.member as GuildMember;
-      const channel = interactionMember.voice.channel;
+      const voiceChannel = this.getVoiceChannel(interaction);
 
-      if (!channel) {
+      if (!voiceChannel) {
         return await interaction.reply({
-          embeds: [new VoiceChannelNotConnectedEmbed()],
+          embeds: [this.playerFacade.getVoiceChannelNotConnectedEmbed()],
         });
       }
 
-      this.playerBuilder.get(channel).unpause();
+      const member = interaction.member as GuildMember;
+      const embed = this.playerFacade.resumeSong(member, voiceChannel);
 
-      return await interaction.reply(`Resumed`);
+      return await interaction.reply({ embeds: [embed] });
     } catch (err) {
-      console.error(err);
+      console.error('Failed to execute resume command:', err);
 
       return await interaction.reply({
-        content: 'Something went wrong',
+        content: 'Something went wrong.',
         flags: MessageFlags.Ephemeral,
       });
     }
+  }
+
+  private getVoiceChannel(
+    interaction: ChatInputCommandInteraction,
+  ): null | VoiceBasedChannel {
+    const member = interaction.member as GuildMember;
+    return member.voice.channel;
   }
 }

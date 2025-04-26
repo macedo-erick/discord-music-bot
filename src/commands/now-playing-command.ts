@@ -3,28 +3,24 @@ import { Command } from '@utils/command';
 import {
   ChatInputCommandInteraction,
   GuildMember,
+  InteractionResponse,
   MessageFlags,
   VoiceBasedChannel,
 } from 'discord.js';
 import { inject, injectable } from 'tsyringe';
 
 @injectable()
-export class PlayCommand extends Command {
+export class NowPlayingCommand extends Command {
   constructor(
     @inject(PlayerFacadeService)
     private readonly playerFacade: PlayerFacadeService,
   ) {
-    super('play', 'Give the song name or URL to start playing', (builder) =>
-      builder.addStringOption((option) =>
-        option
-          .setName('query')
-          .setDescription('Give the song name or URL to start playing')
-          .setRequired(true),
-      ),
-    );
+    super('now-playing', 'Show the current playing song');
   }
 
-  async execute(interaction: ChatInputCommandInteraction) {
+  async execute(
+    interaction: ChatInputCommandInteraction,
+  ): Promise<InteractionResponse> {
     try {
       const voiceChannel = this.getVoiceChannel(interaction);
       if (!voiceChannel) {
@@ -33,19 +29,12 @@ export class PlayCommand extends Command {
         });
       }
 
-      const query = interaction.options.getString('query', true);
-      const member = interaction.member as GuildMember;
-      const embed = await this.playerFacade.playSong(
-        member,
-        voiceChannel,
-        query,
-      );
+      const embed = this.playerFacade.getNowPlayingEmbed(voiceChannel);
 
       return await interaction.reply({ embeds: [embed] });
-    } catch (err) {
-      console.error('Failed to execute play command:', err);
-
-      return await interaction.reply({
+    } catch (error) {
+      console.error('Error executing NowPlayingCommand:', error);
+      return interaction.reply({
         content: 'Something went wrong.',
         flags: MessageFlags.Ephemeral,
       });
@@ -56,6 +45,7 @@ export class PlayCommand extends Command {
     interaction: ChatInputCommandInteraction,
   ): null | VoiceBasedChannel {
     const member = interaction.member as GuildMember;
+    if (!member.voice.channel) return null;
     return member.voice.channel;
   }
 }
