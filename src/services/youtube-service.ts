@@ -6,10 +6,6 @@ import { injectable } from 'tsyringe';
 
 @injectable()
 export class YoutubeService {
-  private readonly PROXY_AGENT = ytdl.createProxyAgent({
-    uri: `${process.env.PROXY_URL}`,
-  });
-
   async download(query: string): Promise<TrackData> {
     return query.startsWith('http')
       ? this.downloadFromUrl(query)
@@ -23,36 +19,29 @@ export class YoutubeService {
       throw new Error('No Results found');
     }
 
-    const { url } = items[0];
+    const { duration: durationSc, name: title, url } = items[0];
 
-    return this.downloadFromUrl(url);
-  }
-
-  private async downloadFromUrl(url: string): Promise<TrackData> {
-    const {
-      videoDetails: { lengthSeconds, thumbnails, title },
-    } = await ytdl.getBasicInfo(url, {
-      requestOptions: { dispatcher: this.PROXY_AGENT.dispatcher },
-    });
-
-    const hours = Math.floor(parseInt(lengthSeconds) / 3600);
-    const minutes = Math.floor((parseInt(lengthSeconds) % 3600) / 60);
-    const seconds = parseInt(lengthSeconds) % 60;
-
-    const duration = [
-      hours > 0 ? hours.toString().padStart(2, '0') : null,
-      minutes.toString().padStart(2, '0'),
-      seconds.toString().padStart(2, '0'),
-    ]
-      .filter(Boolean)
+    const duration = durationSc
+      .split(':')
+      .map((d) => d.padStart(2, '0'))
       .join(':');
 
     return {
       data: ytdl(url, { filter: 'audioonly' }),
       duration,
-      thumbnail: thumbnails[0].url,
       title,
       url,
     };
+  }
+
+  private async downloadFromUrl(url: string): Promise<TrackData> {
+    const parsed = new URL(url);
+    const videoId = parsed.searchParams.get('v');
+
+    if (!videoId) {
+      throw new Error('Invalid URL');
+    }
+
+    return this.downloadByQuery(videoId);
   }
 }
