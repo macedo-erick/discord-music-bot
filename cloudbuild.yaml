@@ -3,13 +3,14 @@ timeout: 1800s
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
-    secretEnv: [ 'APP_TOKEN', 'CLIENT_ID', 'GUILD_ID' ]
+    secretEnv: [ 'APP_TOKEN', 'CLIENT_ID', 'GUILD_ID', 'PROXY_URL']
     args:
       [ '-c',
         "docker build
           --build-arg APP_TOKEN=$$APP_TOKEN
           --build-arg CLIENT_ID=$$CLIENT_ID
           --build-arg GUILD_ID=$$GUILD_ID
+          --build-arg PROXY_URL=PROXY_URL
           -t ${_IMAGE_NAME}
           ."
       ]
@@ -43,3 +44,5 @@ availableSecrets:
       env: 'CLIENT_ID'
     - versionName: projects/$PROJECT_ID/secrets/GUILD_ID/versions/latest
       env: 'GUILD_ID'
+    - versionName: projects/$PROJECT_ID/secrets/PROXY_URL/versions/latest
+      env: 'PROXY_URL'

@@ -1,10 +1,15 @@
 import ytdl from '@distube/ytdl-core';
 import ytsr from '@distube/ytsr';
 import { TrackData } from '@models/track';
+import 'dotenv/config';
 import { injectable } from 'tsyringe';
 
 @injectable()
 export class YoutubeService {
+  private readonly PROXY_AGENT = ytdl.createProxyAgent({
+    uri: `${process.env.PROXY_URL}`,
+  });
+
   async download(query: string): Promise<TrackData> {
     return query.startsWith('http')
       ? this.downloadFromUrl(query)
@@ -26,7 +31,9 @@ export class YoutubeService {
   private async downloadFromUrl(url: string): Promise<TrackData> {
     const {
       videoDetails: { lengthSeconds, thumbnails, title },
-    } = await ytdl.getBasicInfo(url);
+    } = await ytdl.getBasicInfo(url, {
+      requestOptions: { dispatcher: this.PROXY_AGENT.dispatcher },
+    });
 
     const hours = Math.floor(parseInt(lengthSeconds) / 3600);
     const minutes = Math.floor((parseInt(lengthSeconds) % 3600) / 60);

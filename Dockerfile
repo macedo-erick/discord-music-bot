@@ -15,7 +15,8 @@ COPY . .
 ENV NODE_ENV=production \
     APP_TOKEN=${APP_TOKEN} \
     CLIENT_ID=${CLIENT_ID} \
-    GUILD_ID=${GUILD_ID}
+    GUILD_ID=${GUILD_ID} \
+    PROXY_URL=${PROXY_URL}
 
 CMD ["yarn", "start"]
 
